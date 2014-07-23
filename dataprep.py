@@ -25,6 +25,7 @@ import itertools
 import datetime
 import calendar
 import time
+import pytz
 import json
 
 
@@ -37,7 +38,7 @@ def load_json(filename):
     return data
 
 
-def bin_timestamp(timestamp_strings, fmt, binsize = 3600):
+def bin_timestamp(timestamp_strings, fmt, binsize = 3600, filter_holidays = False, tz='UTC'):
     """
     Returns a list of lists, with each sub-list containing a datetime 
     object corresponding to an hour and a integer count of timestamps 
@@ -51,21 +52,32 @@ def bin_timestamp(timestamp_strings, fmt, binsize = 3600):
     """
 
     # convert timestamp string -> datetime objects:
-    dt = [datetime.datetime.strptime(t, fmt) for t in timestamp_strings]
+    if filter_holidays:
+        import sys
+        sys.exit('Filtering out holdiays is not implemented yet.')
+#         special holidays = []
+#         dt = [datetime.datetime.strptime(t, fmt) for t in timestamp_strings\
+#               if t in special_days]
+    else:
+        # TODO, impt: skip any misformatted timestamp strings & print error message
+        dt = [datetime.datetime.strptime(t, fmt) for t in timestamp_strings]
 
     # bin each timestamp into the specified time windows:
-    binned_times = [[datetime.datetime(*time.gmtime(d*binsize)[:6]), len(list(g))] \
+    utc = pytz.timezone(tz)
+    binned_times = [[utc.localize(datetime.datetime(*time.gmtime(d*binsize)[:6])), len(list(g))] \
                     for d,g in itertools.groupby(dt, \
                         lambda di: int(calendar.timegm(di.timetuple()))/binsize)]
+    
 
     # return an list of lists, unzipped from binned_times:
     return [list(t) for t in zip(*binned_times)]
 
 
-def prepare(jsonfile):
+def prepare(jsonfile, tz = 'UTC'):
     """
     [docstring]
     """
+    
     # Load a list of user login times (UTC timestamp):
     logins = load_json(jsonfile)
 

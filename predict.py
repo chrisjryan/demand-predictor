@@ -43,31 +43,28 @@ import datetime
 from collections import namedtuple
 import numpy
 
-# def predict_demand(time = datetime.datetime.)
-
 import dataprep
 
 
-def weekday_hour_grouping(hours, usage):
+def weekday_hour_grouping(hours, usage, filter_holidays = False):
     """
     [doctest]
     """
+    
+    # filter out "special days"
+    if (filter_holidays):
+        hours, usage = filter_special_days(hours, usage)
+    
     # for the dataset, aggregate data on the same hour of the same weekday:
     weekhour_agg = [[[] for _ in range(24)] for _ in range (7)]
-
-#     print len(weekhour_agg)
-#     print len(weekhour_agg[0])
-#     print len(weekhour_agg[0][0])
 
     # NOTE: if the hours array is ordered, you could do this without reaching into each datetime object
     for h, u in zip(hours, usage):
         wd = h.weekday()
         hr = h.timetuple().tm_hour
         weekhour_agg[wd][hr].append(u)
-        
 
     return weekhour_agg
-
 
 
 def average_hours(weekhour_agg):
@@ -75,7 +72,6 @@ def average_hours(weekhour_agg):
     Note, we're calculating the unbiased sample variance here.
     [doctest]
     """
-    
     
     Stats = namedtuple('Stats', ['mean','var'])
     hourly_usage_stats = [[Stats(mean=None, var=None) for _ in range(24)] for _ in range (7)]
@@ -93,6 +89,7 @@ if __name__ == '__main__':
     hours, usage = dataprep.prepare("hourly_demand_prediction_challenge.json")
     
     # perform the hourly grouping & averaging:
+    # (add here a method to group MTWR data together, if needed)
     hourly_usage_stats = average_hours(weekday_hour_grouping(hours, usage))
 
 
