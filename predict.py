@@ -30,33 +30,74 @@
 #     GET timestamps form MIN to MAX (maybe?)
     
 
+
+    
 # A list of datetime obects that specify atypical days (holidays, etc) that 
 # should not be averaged into normal weekdays for demand prediction.
 # (to be updated manually):
 special_dates = []
 
-
+# note that we're considering each hour to correspond to be a random variable
 
 import datetime
+from collections import namedtuple
+import numpy
 
 # def predict_demand(time = datetime.datetime.)
 
 import dataprep
 
 
-# def average_hours():
+def weekday_hour_grouping(hours, usage):
+    """
+    [doctest]
+    """
+    # for the dataset, aggregate data on the same hour of the same weekday:
+    weekhour_agg = [[[] for _ in range(24)] for _ in range (7)]
+
+#     print len(weekhour_agg)
+#     print len(weekhour_agg[0])
+#     print len(weekhour_agg[0][0])
+
+    # NOTE: if the hours array is ordered, you could do this without reaching into each datetime object
+    for h, u in zip(hours, usage):
+        wd = h.weekday()
+        hr = h.timetuple().tm_hour
+        weekhour_agg[wd][hr].append(u)
+        
+
+    return weekhour_agg
+
+
+
+def average_hours(weekhour_agg):
+    """
+    Note, we're calculating the unbiased sample variance here.
+    [doctest]
+    """
+    
+    
+    Stats = namedtuple('Stats', ['mean','var'])
+    hourly_usage_stats = [[Stats(mean=None, var=None) for _ in range(24)] for _ in range (7)]
+    for wd in range(7):
+        for hr in range(24):
+            hourly_usage_stats[wd][hr] = Stats(mean = numpy.mean(weekhour_agg[wd][hr]), \
+                                               var  = numpy.var(weekhour_agg[wd][hr], ddof=1))
+
+    return hourly_usage_stats
 
 
 if __name__ == '__main__':
 
     # load the JSON file (throw sensible error if it doesn't exist):
     hours, usage = dataprep.prepare("hourly_demand_prediction_challenge.json")
+    
+    # perform the hourly grouping & averaging:
+    hourly_usage_stats = average_hours(weekday_hour_grouping(hours, usage))
+
 
     
-    # perform the hourly grouping (share this method in a neat way with the eda.ipynb file)
     
-    
-
 
 # <codecell>
 
