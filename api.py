@@ -2,24 +2,25 @@
 
 from flask import Flask, jsonify, request
 import os
+import numpy
 
 import dataprep
+import predict
 
 
 app = Flask(__name__)
 
 
-# @app.route('/api/predict', methods = ['GET'])
-# def predict_demand():
-#     """
-#     Predict the demand given some specified weekday & hour.
-#     """
+@app.route('/api/predict', methods = ['GET'])
+def predict_demand():
+    """
+    Predict the demand given some specified weekday & hour.
+    """
 
-#     # request should include a dictionary with weekday & hour.
+    weekday_int, hour = (request.data).split(',')
+    st = hourly_usage_stats[int(weekday_int)][int(hour)]
 
-
-
-#     return jsonify( { 'logins (predicted)': logins_predicted } )
+    return jsonify( { 'logins (predicted)': st.mean, '+/- error' : numpy.sqrt(st.var) } )
 
 
 
@@ -63,23 +64,31 @@ def post_data():
 
 if __name__ == '__main__':
 
-	# timestamp string format & time constants:
-	fmt = '%Y-%m-%dT%H:%M:%S+00:00'
-	seconds_per_hour = 60*60 # number of seconds in an hour
+    # timestamp string format & time constants:
+    fmt = '%Y-%m-%dT%H:%M:%S+00:00'
+    seconds_per_hour = 60*60 # number of seconds in an hour
 
-	# load pre-existing data:
-	# datafile = 'hourly_demand_prediction_challenge.json'
-	datafile = ''
-	if os.path.isfile(datafile):
-	    logindata = dataprep.load_json(datafile)
-	else:
-	    logindata = []
+    # load pre-existing data:
+    datafile = 'hourly_demand_prediction_challenge.json'
+    # datafile = ''
+    if os.path.isfile(datafile):
+        logindata = dataprep.load_json(datafile)
+    else:
+        logindata = []
 
-	# compute any statistics:
-	# hours, usage = dataprep.prepare(datafile)
+    # compute statistics:
+    if logindata:
+        hours, usage = dataprep.prepare(datafile)
 
-	# run the API:
-	app.run(debug = True)
+        # necessary? maybe just do this on request:
+        hours = dataprep.convert_timezone_eastern(hours)
+
+        weekhour_agg = predict.weekday_hour_grouping(hours, usage)
+        hourly_usage_stats = predict.average_all_hours(weekhour_agg, 'exp-downweight')
+
+
+    # run the API:
+    app.run(debug = True)
 
 
 

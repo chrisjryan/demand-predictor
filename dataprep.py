@@ -38,6 +38,17 @@ def load_json(filename):
     return data
 
 
+def convert_timezone_eastern(hours):
+    """
+    Convert a list datetimeobjects, which already have a tz object specified, to Eastern time.
+    (TODO: Generalize this method to take in any tz_str.)
+    [doctest]
+    """
+    tz_str = 'US/Eastern'
+    eastern = pytz.timezone(tz_str)
+    return [h.astimezone(eastern) for h in hours]
+
+
 def bin_timestamp(timestamp_strings, fmt, binsize = 3600, filter_holidays = False, tz='UTC'):
     """
     Returns a list of lists, with each sub-list containing a datetime 
