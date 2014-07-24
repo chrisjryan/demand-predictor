@@ -1,27 +1,27 @@
 #! /usr/bin/env python
 
-
 import requests
 import dataprep
 import os
+import argparse
+import sys
 
 
+# parse the terminal input:
+desc = """A script for inserting timestamp data as JSON array into the demand 
+predictor API."""
+parser = argparse.ArgumentParser(description=desc, formatter_class=argparse.RawDescriptionHelpFormatter)
+parser.add_argument('datafile', help='Name of a JSON file containing an array/list of strings containing correctly formtatted timestamps.')
+args = parser.parse_args()
 
-
-
-# load the JSON file containing login data:
-datafile = 'hourly_demand_prediction_challenge.json'
-
-if os.path.isfile(datafile):
-    logindata = dataprep.load_json(datafile)
+# load the JSON file containing login data as an array (not a JSON object):
+if os.path.isfile(args.datafile):
+    logindata = dataprep.load_json(args.datafile)
 else:
-    logindata = []
+    sys.exit('File not found.')
 
+# post the timestamp to the API data as a comma-separated string:
+r = requests.post('http://localhost:5000/api/post', data=','.join(logindata))
 
-# post the data to the server via the Flask API:
-# for ld in logindata[:5]:
-# 	r = requests.post('http://localhost:5000/api/post', data=ld)
-
-# it seems like the data kwarg in requests can handle strings and dictionaries, but not lists of strings. Maybe that's because this cannot be unambiguously formatted in a URL.
-r = requests.post('http://localhost:5000/api/post', data=logindata)
-
+# print the response:
+print r.text

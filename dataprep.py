@@ -50,6 +50,13 @@ def bin_timestamp(timestamp_strings, fmt, binsize = 3600, filter_holidays = Fals
     with a timestamp count == 0).
     [doctest]
     """
+    
+    skipped_timestamps = []
+    
+    # if timestamp_strings is a string, make it a list so it iterates correctly
+    # (find a cleaner method later)
+    if timestamp_strings is str:
+        timestamp_strings = [timestamp_strings]
 
     # convert timestamp string -> datetime objects:
     if filter_holidays:
@@ -60,7 +67,14 @@ def bin_timestamp(timestamp_strings, fmt, binsize = 3600, filter_holidays = Fals
 #               if t in special_days]
     else:
         # TODO, impt: skip any misformatted timestamp strings & print error message
-        dt = [datetime.datetime.strptime(t, fmt) for t in timestamp_strings]
+        dt = []
+        for i,t in enumerate(timestamp_strings):
+            try:
+                dt.append(datetime.datetime.strptime(t, fmt))
+            except:
+                print 'Skipping', t, 'due to incompatible format.'
+                skipped_timestamps.append(i)
+#         dt = [datetime.datetime.strptime(t, fmt) for t in timestamp_strings]
 
     # bin each timestamp into the specified time windows:
     utc = pytz.timezone(tz)
@@ -70,7 +84,7 @@ def bin_timestamp(timestamp_strings, fmt, binsize = 3600, filter_holidays = Fals
     
 
     # return an list of lists, unzipped from binned_times:
-    return [list(t) for t in zip(*binned_times)]
+    return [list(t) for t in zip(*binned_times)], skipped_timestamps
 
 
 def prepare(jsonfile, tz = 'UTC'):
@@ -87,7 +101,7 @@ def prepare(jsonfile, tz = 'UTC'):
     hours_per_week = 24*7
 
     # bin the timestamp strings into hour-spanning windows:
-    hours, usage = bin_timestamp(logins, fmt, seconds_per_hour)
+    (hours, usage), skipped_timestamps = bin_timestamp(logins, fmt, seconds_per_hour)
 
     # fill in any hours without logins to be zero:
     starthour = hours[0]
