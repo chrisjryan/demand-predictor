@@ -90,6 +90,7 @@ def bin_timestamp(timestamp_strings, fmt, binsize = 3600, filter_holidays = Fals
 def prepare(jsonfile, tz = 'UTC'):
     """
     [docstring]
+    Returns 2 variables: one is a list of datetime objects that correspond to year,date, and time. Usage is the amount of logins in that time.
     """
     
     # Load a list of user login times (UTC timestamp):
