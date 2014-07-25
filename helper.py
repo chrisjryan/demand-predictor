@@ -15,7 +15,7 @@ def add_datafile(datafile):
 	datafile is a string correpsonding to the name of this file. 
 	Assumes that the API is running on http://localhost:5000
 	>>> add_datafile('hourly_demand_prediction_challenge.json')
-	u'22447 of 22447 timstamp(s) inserted. \\n(0 timestamp(s) skipped due to misformatting.)'
+	u'22447 of 22447 timestamp(s) inserted. \\n(0 timestamp(s) skipped due to misformatting.)'
 	>>> add_datafile('foo_bar.json')
 	Traceback (most recent call last):
 	...
