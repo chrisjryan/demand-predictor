@@ -3,35 +3,6 @@
 
 # <codecell>
 
-# Hourly Demand Prediction Challenge
-# (Predict future hourly demand based on past data)
-# 
-# 1) Average data based on weekday
-#        - holidays will be outliers (Easter, ...?)
-#        - discuss outliers (sports games, etc), even though uou might not account for each
-#
-#
-#
-# [cross validate]
-#
-#
-# useful functions:
-#     calendar.weekday(year, month, day)      retruns day of week [0-6]
-#     datetime.datetime.now()                 now, date + time
-#     datetime.datetime.now().time()          now, only time
-#     time.gmtime()                           convert time since epoch -> UTC
-#     time.localime()                         convert time since epoch -> local time
-#     time.timegm()                           convert UTC -> time since epoch
-#     time.strftime(format[, t])              convert a formatted string toe a 
-
-# TASKS:
-#     GET a prediction, given a time
-#     PUT more another time stamp (or a number of timestamps?)
-#     GET timestamps form MIN to MAX (maybe?)
-    
-
-
-    
 # A list of datetime obects that specify atypical days (holidays, etc) that 
 # should not be averaged into normal weekdays for demand prediction.
 # (to be updated manually):

@@ -85,7 +85,6 @@ def bin_timestamp(timestamp_strings, fmt, binsize = 3600, filter_holidays = Fals
             except:
                 print 'Skipping', t, 'due to incompatible format.'
                 skipped_timestamps.append(i)
-#         dt = [datetime.datetime.strptime(t, fmt) for t in timestamp_strings]
 
     # bin each timestamp into the specified time windows:
     utc = pytz.timezone(tz)
