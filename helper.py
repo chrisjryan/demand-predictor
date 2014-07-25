@@ -52,7 +52,7 @@ def predictor(weekday, hour):
 	...
 	SystemExit: Error: please choose a weekday by specifying the first 3 letters of one.
 	"""
-	daylist = ['sun','mon','tue','wed','thu','fri','sat']
+	daylist = ['mon','tue','wed','thu','fri','sat','sun']
 
 	if weekday.lower() not in daylist:
 		sys.exit('Error: please choose a weekday by specifying the first 3 letters of one.')

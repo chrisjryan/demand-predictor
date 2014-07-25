@@ -150,7 +150,7 @@ def post_data():
     hourly_usage_stats = predict.average_all_hours(weekhour_agg, 'exp-downweight')
 
     # return results:
-    result = '%i of %i timstamp(s) inserted. \n(%i timestamp(s) skipped due to misformatting.)' \
+    result = '%i of %i timestamp(s) inserted. \n(%i timestamp(s) skipped due to misformatting.)' \
             % (len(new_timestamps)-len(skipped_timestamps), len(new_timestamps), len(skipped_timestamps)) 
 
     return result

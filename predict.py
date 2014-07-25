@@ -9,6 +9,7 @@ import datetime
 from collections import namedtuple
 import numpy
 import os
+import sys
 
 import dataprep
 
@@ -90,15 +91,17 @@ def average_hour(weekhour, method='average-plain'):
         return Stats(mean = numpy.mean(usagecounts), \
                      var  = numpy.var(usagecounts, ddof=1))
 
-    if method == 'exp-downweight':
+    elif method == 'exp-downweight':
         return exp_downweight_avg(weekhour)
+    
+    else:
+        sys.exit('Invalid averaging method specified.')
         
         
-
 def average_all_hours(weekhour_agg, method='average-plain'):
     """
     Compute the average and variance, using the method specified as an 
-    argument, for each hour on each weekday.
+    argument (passed on to average_hour()), for each hour on each weekday.
     """
     
     hourly_usage_stats = [[Stats(mean=None, var=None) for _ in range(24)] for _ in range (7)]
@@ -112,7 +115,7 @@ def average_all_hours(weekhour_agg, method='average-plain'):
 if __name__ == '__main__':
     """
     Load the JSON file containing timestamp data and compute average usage 
-    statistics for each hour in a week. 
+    statistics for each hour in a week.
     """
     # A list of datetime obects that specify atypical days (holidays, etc) 
     # (to be updated manually):
