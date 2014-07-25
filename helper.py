@@ -10,6 +10,17 @@ import dataprep
 
 
 def add_datafile(datafile):
+	"""
+	Add data to the we app from a JSON file containing an array of timestamps. 
+	datafile is a string correpsonding to the name of this file. 
+	Assumes that the API is running on http://localhost:5000
+	>>> add_datafile('hourly_demand_prediction_challenge.json')
+	u'22447 of 22447 timstamp(s) inserted. \\n(0 timestamp(s) skipped due to misformatting.)'
+	>>> add_datafile('foo_bar.json')
+	Traceback (most recent call last):
+	...
+	SystemExit: File not found.
+	"""
 	# load the JSON file containing login data as an array (not a JSON object):
 	if os.path.isfile(datafile):
 	    logindata = dataprep.load_json(datafile)
@@ -29,7 +40,17 @@ def predictor(weekday, hour):
 	weekday and hour. Weekdays should be specified by a 3 letter 
 	string, and hours should be specified as an int between 0 an 23.
 	Assumes that the API is running on http://localhost:5000.
-	[doctest]
+	>>> r = predictor('mon', 13)
+	>>> r.status_code
+	200
+	>>> r = predictor('tue', 36)
+	Traceback (most recent call last):
+	...
+	SystemExit: Error: please specify an hour between 0 and 23.
+	>>> r = predictor('xro', 13)
+	Traceback (most recent call last):
+	...
+	SystemExit: Error: please choose a weekday by specifying the first 3 letters of one.
 	"""
 	daylist = ['sun','mon','tue','wed','thu','fri','sat']
 
@@ -48,7 +69,22 @@ def predictor(weekday, hour):
 
 def predictor_daterange(datestr1, datestr2):
 	"""
-	[doctest]
+	This function returns the predicted hourly usage for each hour in the date 
+	range specified. These predictions are returned as a comma-separated string 
+	with linebreaks suitable for file output. Date strings must be formatted as 
+	'%Y-%m-%d'. Assumes that the API is running on http://localhost:5000
+	>>> r = predictor_daterange('2012-05-01','2012-05-15')
+	>>> r.status_code
+	200
+	>>> r = predictor_daterange('2012-5-1','2012-5-15')
+	>>> r.status_code
+	200
+	>>> r = predictor_daterange('2011-05-01','2011-05-15')
+	>>> r.content
+	'Error: choose a date range in the future.'
+	>>> r = predictor_daterange('2012-05-15','2012-05-01')
+	>>> r.content
+	'Error: min date greater than max date.'
 	"""
 
 	# check to make sure each string is formatted correctly:
@@ -65,6 +101,44 @@ def predictor_daterange(datestr1, datestr2):
 	return r
 
 
+def main(args):
+	"""
+	Executes the helper functions accoring to the user's specifications.
+	>>> from argparse import Namespace
+	>>> main(Namespace(filename=None, hour=None, mode='insert', weekday=None))
+	Traceback (most recent call last):
+	...
+	SystemExit: Error: for 'insert' mode, please specify a filename.
+	>>> main(Namespace(filename=None, hour=None, mode='predict', weekday=None))
+	Traceback (most recent call last):
+	...
+	SystemExit: Error: for 'predict' mode, please specify a weekday and hour.
+	>>> main(Namespace(filename=None, hour=None, mode=None, weekday=None))
+	Traceback (most recent call last):
+	...
+	SystemExit: Error: please specify either 'insert' or 'predict' (or use -h for usage instructions).
+	"""
+
+	if args.mode == 'predict':
+		if args.weekday and args.hour:
+			r = predictor(args.weekday, int(args.hour))	
+			try:
+				for k,v in r.json().iteritems():
+					print '%-25s %f' % (k,v)
+			except:
+				print r.content
+		else:
+			sys.exit("Error: for 'predict' mode, please specify a weekday and hour.")
+	elif args.mode == 'insert':
+		if args.filename:
+			rtext = add_datafile(args.filename)
+			print rtext
+		else:
+			sys.exit("Error: for 'insert' mode, please specify a filename.")
+	else:
+		sys.exit("Error: please specify either 'insert' or 'predict' (or use -h for usage instructions).")
+
+
 if __name__ == '__main__':
 
 	# parse the terminal input:
@@ -76,23 +150,4 @@ if __name__ == '__main__':
 	parser.add_argument('-filename', help='The name of a file containing a JSON array of timestamp data.')
 	args = parser.parse_args()
 
-
-	if args.mode == 'predict':
-		if args.weekday and args.hour:
-			r = predictor(args.weekday, int(args.hour))	
-			if r.status_code == 200:
-				# print r
-				for k,v in r.json().iteritems():
-					print '%-25s %f' % (k,v)
-			elif r.status_code == 204:
-				print'No login data has been inserted yet.'
-		else:
-			sys.exit("Error: for 'predict' mode, please specify a weekday and hour.")
-	elif args.mode == 'insert':
-		if args.filename:
-			rtext = add_datafile(args.filename)
-			print rtext
-		else:
-			sys.exit("Error: for 'insert' mode, please specify a filename.")
-	else:
-		sys.exit("Error: please specify either 'insert' or 'predict' (or use -h for usage instructions).")
+	main(args)

@@ -3,24 +3,25 @@
 
 # <codecell>
 
-# A list of datetime obects that specify atypical days (holidays, etc) that 
-# should not be averaged into normal weekdays for demand prediction.
-# (to be updated manually):
-special_dates = []
-
-# note that we're considering each hour to correspond to be a random variable
+#!/usr/bin/env python
 
 import datetime
 from collections import namedtuple
 import numpy
+import os
 
 import dataprep
-
 
 Stats = namedtuple('Stats', ['mean','var'])
 
 
 def exp_downweight_avg(dates_counts, s = 0.97):
+    """
+    Average the timestamp counts for a particular hour of a particular 
+    weekday. Older data are downweighted exponentially, so newer data can 
+    have more influence on the average. At the moment the parameter for this 
+    scheme is simply read in as an optional argument.
+    """
 
     # dividing by the sum of the weights will normalize our statistics.
     # (note: in the limit of lots of data this will = 1-s. But we can't 
@@ -37,7 +38,7 @@ def exp_downweight_avg(dates_counts, s = 0.97):
     m = running_mean/norm_const
 
     # TODO: this is a biased weighted sample variance, for now, which is close.
-    # eventially take time to consider the unbiased one.
+    # eventually take time to consider the unbiased one.
     counts = zip(*dates_counts)[1]
     running_var = 0
     for weight, count in zip(weight_list, counts):
@@ -47,10 +48,17 @@ def exp_downweight_avg(dates_counts, s = 0.97):
     return Stats(mean = m, var = v)
 
 
-
 def weekday_hour_grouping(hours, usage, filter_holidays = False):
     """
-    [doctest]
+    This function groups the 1d arrays of binned timestamps count data with 
+    other data on the same weekday and hour, but on different dates.
+    The output, 'weekhour_agg', is a 2d list with each element correpsonding 
+    to an hour of a week day (hence the 2 dimensions). Each of these elements 
+    contains a list of 2-tuples, where 2-tuple contains this hour window for 
+    some specific date and the number of timestamps binned in this window on 
+    this date. Maintaining the data at this point helps keep the age of the 
+    data before averaging, so this can be weighted properly using, e.g., the 
+    exponential downweighting method.
     """
     
     # filter out "special days"
@@ -71,7 +79,10 @@ def weekday_hour_grouping(hours, usage, filter_holidays = False):
 
 def average_hour(weekhour, method='average-plain'):
     """
-    [doctest]
+    Average the timestamp counts for a particular hour of a particular 
+    weekday. At the moment, counts may be averaged normally or older data 
+    can be exponentially downweighted in favor of newer data. (See docstring 
+    for exp_downweight_avg().)
     """
 
     if method == 'average-plain':
@@ -86,8 +97,8 @@ def average_hour(weekhour, method='average-plain'):
 
 def average_all_hours(weekhour_agg, method='average-plain'):
     """
-    Note, we're calculating the unbiased sample variance here.
-    [doctest]
+    Compute the average and variance, using the method specified as an 
+    argument, for each hour on each weekday.
     """
     
     hourly_usage_stats = [[Stats(mean=None, var=None) for _ in range(24)] for _ in range (7)]
@@ -99,20 +110,28 @@ def average_all_hours(weekhour_agg, method='average-plain'):
 
 
 if __name__ == '__main__':
+    """
+    Load the JSON file containing timestamp data and compute average usage 
+    statistics for each hour in a week. 
+    """
+    # A list of datetime obects that specify atypical days (holidays, etc) 
+    # (to be updated manually):
+#     special_dates = []
 
     # load the JSON file (throw sensible error if it doesn't exist):
     # (each member of the hours, usage lists corresponds to a unique hour on a unique date.)
-    hours, usage = dataprep.prepare("hourly_demand_prediction_challenge.json")
-    
-    # perform the hourly grouping & averaging:
-    # (add here a method to group MTWR data together, if needed)
-    weekhour_agg = weekday_hour_grouping(hours, usage)
-    method='average-plain'
-    hourly_usage_stats = average_all_hours(weekhour_agg, method)
+    datafile = "hourly_demand_prediction_challenge.json"
+    if os.path.isfile(datafile):
+        hours, usage = dataprep.prepare(datafile)
 
+        # perform the hourly grouping & averaging:
+        # (add here a method to group MTWR data together, if needed)
+        weekhour_agg = weekday_hour_grouping(hours, usage)
+        method='average-plain'
+        hourly_usage_stats = average_all_hours(weekhour_agg, method)
+    else:
+        print 'Error: No data file found.'
 
-    
-    
 
 # <codecell>
 

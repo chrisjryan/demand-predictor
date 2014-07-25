@@ -3,23 +3,7 @@
 
 # <codecell>
 
-# Hourly Demand Prediction Challenge
-# (Exploratory data analysis)
-# 
-# metadata: 
-#     - JSON file consisting of login times, only
-#     - UTC timestamps from March 1 to May 1
-#     - Washington DC
-#
-# Note: when binning by hour, note that there are some hours where no 
-#       login was made.
-# 
-# 
-# 
-
-# <codecell>
-
-# Bin the data to visualize hourly demand.
+#!/usr/bin/env python
 
 import itertools
 import datetime
@@ -31,7 +15,8 @@ import json
 
 def load_json(filename):
     """
-    [add docstring]
+    Simply load and return a JSON file. This will typically contain a JSON 
+    array and will be returned as a list of timestamp strings.
     """
     with open(filename) as infile:
         data = json.load(infile)
@@ -40,10 +25,15 @@ def load_json(filename):
 
 def convert_timezone_eastern(hours):
     """
-    Convert a list datetimeobjects, which already have a tz object specified, to Eastern time.
-    (TODO: Generalize this method to take in any tz_str.)
-    [doctest]
+    Convert a list datetime objects, which already have a tz object specified,
+    to Eastern time. (TODO: Generalize this method to take in any tz_str.)
+    >>> import datetime, pytz
+    >>> utc = pytz.utc
+    >>> dtlist = [utc.localize(datetime.datetime(2012,5,5)+datetime.timedelta(days=x)) for x in range(3)]
+    >>> convert_timezone_eastern(dtlist)
+    [datetime.datetime(2012, 5, 4, 20, 0, tzinfo=<DstTzInfo 'US/Eastern' EDT-1 day, 20:00:00 DST>), datetime.datetime(2012, 5, 5, 20, 0, tzinfo=<DstTzInfo 'US/Eastern' EDT-1 day, 20:00:00 DST>), datetime.datetime(2012, 5, 6, 20, 0, tzinfo=<DstTzInfo 'US/Eastern' EDT-1 day, 20:00:00 DST>)]
     """
+    
     tz_str = 'US/Eastern'
     eastern = pytz.timezone(tz_str)
     return [h.astimezone(eastern) for h in hours]
@@ -59,7 +49,10 @@ def bin_timestamp(timestamp_strings, fmt, binsize = 3600, filter_holidays = Fals
     hour between the min and max timestamp in the dataset (i.e., hour 
     windows that have 0 timestamps will _not_ be contained in the list 
     with a timestamp count == 0).
-    [doctest]
+    >>> strs = u'2012-03-01T00:05:55+00:00', u'2012-03-01T00:06:23+00:00', u'2012-03-01T00:06:52+00:00'
+    >>> fmt = '%Y-%m-%dT%H:%M:%S+00:00'
+    >>> bin_timestamp(strs, fmt)
+    ([[datetime.datetime(2012, 3, 1, 0, 0, tzinfo=<UTC>)], [3]], [])
     """
     
     skipped_timestamps = []
@@ -99,13 +92,17 @@ def bin_timestamp(timestamp_strings, fmt, binsize = 3600, filter_holidays = Fals
 
 def prepare(jsonfile, tz = 'UTC'):
     """
-    [docstring]
-    Returns 2 variables: one is a list of datetime objects that correspond to year,date, and time. Usage is the amount of logins in that time.
+    This takes in a JSON file containing timestamp data and calls functions 
+    to convert these to datetime objects and bin them into hour long windows.
+    'tz' is the timezone and is UTC (~Greenwich mean time) by default. 
+    Returns 2 variables: 'hours' is a list of datetime objects that correspond
+    to year, date, and the the start of the hour long window that describes 
+    each bin. 'usage' is the amount of logins in that time in the dataset.
     """
     
     # Load a list of user login times (UTC timestamp):
     logins = load_json(jsonfile)
-
+    
     # timestamp string format & time constants:
     fmt = '%Y-%m-%dT%H:%M:%S+00:00'
     seconds_per_hour = 60*60 # number of seconds in an hour
@@ -113,18 +110,18 @@ def prepare(jsonfile, tz = 'UTC'):
 
     # bin the timestamp strings into hour-spanning windows:
     (hours, usage), skipped_timestamps = bin_timestamp(logins, fmt, seconds_per_hour)
-
+    
     # fill in any hours without logins to be zero:
     starthour = hours[0]
     total_hours = (calendar.timegm(max(hours).timetuple()) - calendar.timegm(min(hours).timetuple()))/60/60
     allhours = [starthour + datetime.timedelta(hours = x) for x in range(total_hours)]
     for dt in allhours:
-        if dt not in hours:# and dt < last_timestamp:
+        if dt not in hours:
             hours.append(dt)
             usage.append(0)
 
     # sort the list by hour & unzip:
-    hours, usage = zip(*sorted(zip(hours, usage), key = lambda hu:hu[0]))
+#     hours, usage = zip(*sorted(zip(hours, usage), key = lambda hu:hu[0]))
 
     return hours, usage
 
