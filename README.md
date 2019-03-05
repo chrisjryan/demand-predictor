@@ -1,5 +1,5 @@
 
-#Demand Predictor 
+# Demand Predictor 
 
 
 This code here was written to analyze timestamp data for a web service. Timestamps correspond to user logins and are thus a proxy for demand of the web service. The aim was to visualize and analyze past data for future predictions. 'plot.ipynb' demonstrates how to use functions in 'dataprep.py' and 'predict.py' to munge data, and visualizes data via Matplotlib (see 'Data Patterns' below for a discussion of such an analysis). Some functions may be hardcoded at the moment to assume that a file named 'hourly_demand_prediction_challenge.json' exists in the same folder as these Python files. This is contains a JSON array of timestamp strings (see 'Methods' section below).
@@ -7,7 +7,7 @@ This code here was written to analyze timestamp data for a web service. Timestam
 
 ___
 
-##Dataset Patterns
+## Dataset Patterns
 
 
 <p align="center">
@@ -23,7 +23,7 @@ Further insight could be gathered by combining other data sources with these dat
 
 ___
 
-##Methods
+## Methods
 
 All functions feature docstrings that can be read via Python's interactive help() function.
 
@@ -38,7 +38,7 @@ Several functions depend on a file named 'hourly_demand_prediction_challenge.jso
 
 ___
 
-##API
+## API
 
 The 'api.py' file implements methods discussed above as a Flask-based application programming interface (API). This allows users to query and add to the dataset using HTTP requests. To start the server on http://locahost:5000, run
 
@@ -95,7 +95,7 @@ Run `python helper.py -h` for usage instructions.
 
 ___
 
-##To do
+## To do
 
 * More modern prediction methods could be implemented straightforwardly. In particular methods for autoregression in the StatsModels Python library should be accessible and could give better performance.
 * At the moment, statistical averages are re-calculated from scratch at each insertion of a new set of timestamp data. With some minor refactoring, running averages could instead by updated on the fly.
